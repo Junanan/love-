@@ -17,6 +17,25 @@
     display: flex; flex-direction: column; align-items: center;
     position: relative;
   }
+  body::before {
+    content: ""; position: fixed; inset: 0; pointer-events: none; z-index: 0; opacity: .055;
+    background-image:
+      radial-gradient(circle at 20% 30%, #7FB8E8 0 2px, transparent 3px),
+      radial-gradient(circle at 80% 60%, #F2705B 0 2px, transparent 3px),
+      radial-gradient(circle at 45% 80%, #F6C453 0 2px, transparent 3px);
+    background-size: 120px 120px, 160px 160px, 200px 200px;
+  }
+  .music-toggle {
+    position: fixed; top: 12px; right: 12px; z-index: 6;
+    border: 1px solid rgba(127,184,232,.5); background: rgba(255,255,255,.72);
+    color: #5B7C99; border-radius: 999px; padding: 7px 12px; font-size: 12px;
+    backdrop-filter: blur(6px); display: inline-flex; align-items: center; gap: 6px;
+  }
+  .music-toggle[aria-pressed="true"] { background: #7FB8E8; color: #fff; }
+  .music-toggle { width: 36px; height: 36px; justify-content: center; padding: 0; }
+  .music-icon { display: inline-block; }
+  .music-toggle[aria-pressed="true"] .music-icon { animation: spin 1.15s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
   /* 漂浮装饰 */
   .floater { position: fixed; opacity: .35; pointer-events: none; z-index: 0; animation: drift linear infinite; }
   @keyframes drift {
@@ -25,25 +44,38 @@
   }
   .tomato { width: 22px; height: 22px; border-radius: 50%; background: #F2705B; position: fixed; opacity: .3; }
   .tomato::before { content: ""; position: absolute; top: -6px; left: 8px; width: 8px; height: 7px; background: #7FBF7F; border-radius: 50% 50% 0 0; }
+  .floater.gemini { color: #7FB8E8; }
+  .floater svg { display: block; width: 100%; height: 100%; }
+  .floater.horse { opacity: .5; }
+  .floater.cat { opacity: .16; }
+  body.calm .floater.cat { opacity: .08; }
+  body.calm .floater { opacity: .14; }
+  body.calm .tomato { opacity: .18; }
+  body.calm .floater.horse { opacity: .25; }
   /* 顶部进度 */
-  .progress-wrap { width: 100%; max-width: 420px; padding: 18px 24px 0; z-index: 2; }
+  .progress-wrap { width: 100%; max-width: 420px; padding: 18px 24px 0; z-index: 2; flex: 0 0 auto; }
   .progress-text { font-size: 12px; color: #8AA3B8; text-align: center; margin-bottom: 8px; letter-spacing: 1px; }
   .progress-bar { height: 4px; background: rgba(127,184,232,.25); border-radius: 2px; overflow: hidden; }
   .progress-fill { height: 100%; background: #7FB8E8; border-radius: 2px; transition: width .4s ease; }
   /* 卡片 */
-  .stage { flex: 1; width: 100%; display: flex; align-items: center; justify-content: center; z-index: 2; padding: 12px 0; }
+  .stage { flex: 1; min-height: 0; width: 100%; display: flex; flex-direction: column; z-index: 2; padding: 12px 0 8px; overflow-y: auto; overflow-x: hidden; -webkit-overflow-scrolling: touch; }
   .card {
     width: 84%; max-width: 420px; background: #fff; border-radius: 20px;
     box-shadow: 0 8px 24px rgba(100,150,200,.12);
-    padding: 36px 28px 32px; text-align: center;
-    transition: transform .3s ease, opacity .3s ease;
+    padding: 36px 28px 32px; text-align: center; margin: auto; flex: 0 0 auto;
+    transition: transform .34s cubic-bezier(.55,.08,.35,.95);
+    will-change: transform; backface-visibility: hidden; -webkit-backface-visibility: hidden;
+    transform-origin: 50% 60%;
   }
-  .card.slide-out { transform: translateX(-40px); opacity: 0; }
-  .card.slide-in { animation: slideIn .3s ease; }
-  @keyframes slideIn { from { transform: translateX(40px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+  /* 纯位移动画（不用 opacity，避免部分手机 WebView 合成闪黑）：
+     旧卡带一点倾斜被"拨走"，新卡带回弹落定，手感柔和不生硬 */
+  .card.slide-out { transform: translateX(-135%) rotate(-7deg); }
+  .card.slide-in { animation: slideIn .5s cubic-bezier(.25,1.25,.4,1); }
+  @keyframes slideIn { from { transform: translateX(125%) rotate(6deg); } to { transform: translateX(0) rotate(0); } }
   .emoji { font-size: 40px; margin-bottom: 18px; }
   .text { font-size: 18px; line-height: 1.7; white-space: pre-line; }
   .text.big { font-size: 28px; letter-spacing: 4px; font-weight: 600; }
+  .text.final { font-size: 30px; letter-spacing: 2px; font-weight: 600; line-height: 1.45; }
   .code {
     margin-top: 22px; background: #2B3440; border-radius: 10px;
     padding: 14px 16px; text-align: left;
@@ -52,22 +84,23 @@
     white-space: pre-wrap; word-break: break-all;
   }
   /* 按钮区 */
-  .actions { width: 100%; max-width: 420px; padding: 0 24px calc(24px + env(safe-area-inset-bottom)); z-index: 2; text-align: center; }
+  .actions { width: 100%; max-width: 420px; padding: 10px 24px calc(24px + env(safe-area-inset-bottom)); z-index: 2; text-align: center; flex: 0 0 auto; }
   .btn {
     background: #7FB8E8; color: #fff; border: none; border-radius: 999px;
     font-size: 16px; padding: 13px 52px; letter-spacing: 4px;
     box-shadow: 0 6px 16px rgba(127,184,232,.4);
   }
+  .btn:disabled { opacity: .72; }
   .btn:active { transform: scale(.96); }
-  .btn-yes { font-size: 19px; padding: 15px 64px; animation: breathe 2s ease-in-out infinite; }
+  .btn-yes { font-size: 19px; padding: 15px 58px; letter-spacing: 2px; animation: breathe 2s ease-in-out infinite; }
   @keyframes breathe { 0%,100% { transform: scale(1); } 50% { transform: scale(1.05); } }
   .hint { margin-top: 12px; font-size: 12px; color: #A9BCCB; }
   /* 第14卡结果 */
   .result { display: none; }
-  .result .ok-title { font-size: 22px; font-weight: 600; margin-bottom: 14px; }
+  .result .ok-title { font-size: 24px; font-weight: 600; margin-bottom: 14px; line-height: 1.5; }
   .result .ok-date { font-size: 15px; color: #8AA3B8; margin-bottom: 6px; }
   .result .ok-day { font-size: 15px; color: #8AA3B8; margin-bottom: 18px; }
-  .result .ok-counter { font-size: 17px; color: #3A4A5A; }
+  .result .ok-counter { font-size: 17px; color: #3A4A5A; line-height: 1.7; }
   .celebration { position: fixed; bottom: -30px; z-index: 5; pointer-events: none; animation: riseUp linear forwards; }
   @keyframes riseUp {
     0% { transform: translateY(0) scale(.6); opacity: 0; }
@@ -76,7 +109,7 @@
   }
   .btn:focus-visible { outline: 3px solid rgba(43,52,64,.35); outline-offset: 3px; }
   @media (prefers-reduced-motion: reduce) {
-    .floater, .tomato, .btn-yes { animation: none !important; }
+    .floater, .tomato, .btn-yes, .music-toggle[aria-pressed="true"] .music-icon { animation: none !important; }
     .card, .btn, .progress-fill { transition: none !important; }
     .celebration { display: none !important; }
   }
@@ -89,16 +122,18 @@
   <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:7.14%"></div></div>
 </div>
 
+<button class="music-toggle" id="musicToggle" type="button" aria-pressed="false" aria-label="播放音乐"><span class="music-icon" id="musicIcon">♪</span></button>
+
 <div class="stage">
   <div class="card" id="card">
     <div class="emoji" id="cardEmoji">💌</div>
     <div class="text" id="cardText"></div>
     <div class="code" id="cardCode"></div>
     <div class="result" id="result">
-      <div class="ok-title">协议生效</div>
-      <div class="ok-date">2026年11月15日</div>
+      <div class="ok-title">那我们，从今天开始。</div>
+      <div class="ok-date" id="okDate">2026年11月15日</div>
       <div class="ok-day" id="okDay">在一起的第 1 天</div>
-      <div class="ok-counter" id="okCounter">我们已经在一起 1 天</div>
+      <div class="ok-counter" id="okCounter">以后的很多顿饭，都想和你一起吃。</div>
     </div>
   </div>
 </div>
@@ -109,6 +144,8 @@
 </div>
 
 <script>
+var START_DATE = '2026-11-15';
+var AGREED_KEY = 'nanqian.love.agreed';
 var cards = [
   { emoji: "💌", text: "给温前玲", code: "// 这个页面只有一个观众" },
   { emoji: "😊", text: "你的笑容和眼睛，\n比我写过的所有代码都好看。", code: "// 审美这件事上，不存在bug" },
@@ -117,7 +154,7 @@ var cards = [
   { emoji: "🐬", text: "有个人看海豚表演，\n会心疼它们吃得少、还要一直表演。", code: "soft_heart = true;" },
   { emoji: "🎮", text: "她玩游戏输了会耍赖。", code: "// 但我从来没赢过（不敢" },
   { emoji: "🌧️", text: "下雨天，我会担心你有没有带伞。", code: "if (weather.rain) { worry(about: 'you'); }" },
-  { emoji: "📖", text: "我正在学习让你开心的方法：\n你哈哈的时候陪你哈哈，\n你安静的时候陪你安静。", code: "learning(you).every(day); // 终身课程，不退学" },
+  { emoji: "📖", text: "我在慢慢学着懂你。\n你哈哈的时候，陪你哈哈；\n你安静的时候，也陪着你。", code: "learning(you).every(day); // 终身课程，不退学" },
   { emoji: "🍜", text: "想和你一起吃很多顿饭，从老三样到DQ。", code: "food.list.push('和你一起吃的一切');" },
   { emoji: "🛏️", text: "她睡觉要抱着东西，还要人拍背。", code: "// 这个岗位我申请了，长期有效" },
   { emoji: "🌊", text: "她说，不可以随便拉女生的手，拥抱也是。\n所以10月31日那次，我牵得很认真；\n11月8日，河边的拥抱，风可以作证。", code: "// 每一步，都走得很认真" },
@@ -127,6 +164,8 @@ var cards = [
 ];
 
 var idx = 0;
+var agreed = false;
+var isAnimating = false;
 var cardEl = document.getElementById('card');
 var emojiEl = document.getElementById('cardEmoji');
 var textEl = document.getElementById('cardText');
@@ -136,38 +175,67 @@ var nextBtn = document.getElementById('nextBtn');
 var hintEl = document.getElementById('hint');
 var progressText = document.getElementById('progressText');
 var progressFill = document.getElementById('progressFill');
-var agreed = false;
+
+function startParts() {
+  var p = START_DATE.split('-');
+  return { y: Number(p[0]), m: Number(p[1]), d: Number(p[2]) };
+}
+
+function startDateText() {
+  var s = startParts();
+  return s.y + '年' + s.m + '月' + s.d + '日';
+}
 
 function render() {
+  idx = Math.max(0, Math.min(idx, cards.length - 1));
   var c = cards[idx];
+  document.body.classList.toggle('calm', idx >= 12);
   emojiEl.textContent = c.emoji;
   emojiEl.style.display = c.emoji ? 'block' : 'none';
   textEl.textContent = c.text;
-  textEl.className = c.big ? 'text big' : 'text';
+  textEl.className = c.final ? 'text final' : (c.big ? 'text big' : 'text');
   codeEl.textContent = c.code || '';
   codeEl.style.display = c.code ? 'block' : 'none';
   resultEl.style.display = 'none';
   progressText.textContent = '告白进度 ' + (idx + 1) + ' / 14';
   progressFill.style.width = ((idx + 1) / 14 * 100) + '%';
   if (c.final) {
-    nextBtn.textContent = '好';
+    nextBtn.textContent = '好呀 (˶ᵔᵕᵔ˶)';
     nextBtn.className = 'btn btn-yes';
     hintEl.style.display = 'none';
   } else {
     nextBtn.textContent = '下一句';
     nextBtn.className = 'btn';
     hintEl.style.display = 'block';
-    hintEl.textContent = '还有 ' + (13 - idx) + ' 句没说';
+    hintEl.textContent = '还有 ' + (13 - idx) + ' 句没说 (｡•̀ᴗ-)✧';
   }
 }
 
 function dayCount() {
-  // 以东八区日期计算：2026-11-15 为第 1 天
+  var s = startParts();
   var nowUtc8 = new Date(Date.now() + 8 * 3600 * 1000);
   var todayUtc8 = Date.UTC(nowUtc8.getUTCFullYear(), nowUtc8.getUTCMonth(), nowUtc8.getUTCDate());
-  var startUtc8 = Date.UTC(2026, 10, 15);
+  var startUtc8 = Date.UTC(s.y, s.m - 1, s.d);
   var days = Math.floor((todayUtc8 - startUtc8) / 86400000) + 1;
   return days < 1 ? 1 : days;
+}
+
+function showResult(withCelebration) {
+  agreed = true;
+  isAnimating = false;
+  nextBtn.disabled = true;
+  nextBtn.style.display = 'none';
+  textEl.style.display = 'none';
+  emojiEl.style.display = 'none';
+  codeEl.style.display = 'none';
+  resultEl.style.display = 'block';
+  document.getElementById('okDate').textContent = startDateText();
+  document.getElementById('okDay').textContent = '在一起的第 ' + dayCount() + ' 天';
+  document.getElementById('okCounter').textContent = '以后的很多顿饭，都想和你一起吃。';
+  setInterval(function () {
+    document.getElementById('okDay').textContent = '在一起的第 ' + dayCount() + ' 天';
+  }, 60000);
+  if (withCelebration) celebrate();
 }
 
 function celebrate() {
@@ -188,50 +256,158 @@ function celebrate() {
   }
 }
 
-nextBtn.addEventListener('click', function () {
-  if (agreed) return;
-  var c = cards[idx];
-  if (c.final) {
-    agreed = true;
-    nextBtn.style.display = 'none';
-    textEl.style.display = 'none';
-    emojiEl.style.display = 'none';
-    resultEl.style.display = 'block';
-    var d = dayCount();
-    document.getElementById('okDay').textContent = '在一起的第 ' + d + ' 天';
-    document.getElementById('okCounter').textContent = '我们已经在一起 ' + d + ' 天';
-    setInterval(function () {
-      var dd = dayCount();
-      document.getElementById('okDay').textContent = '在一起的第 ' + dd + ' 天';
-      document.getElementById('okCounter').textContent = '我们已经在一起 ' + dd + ' 天';
-    }, 60000);
-    celebrate();
+var musicBtn = document.getElementById('musicToggle');
+var bgm = new Audio('music.mp3');
+bgm.loop = true;
+bgm.preload = 'none';
+var audioCtx = null;
+var musicTimer = null;
+var musicMaster = null;
+var musicOn = false;
+
+function stopMusic() {
+  if (musicTimer) clearInterval(musicTimer);
+  musicTimer = null;
+  if (musicMaster) {
+    try { musicMaster.disconnect(); } catch (e) {}
+    musicMaster = null;
+  }
+}
+
+function startMusic() {
+  var AC = window.AudioContext || window.webkitAudioContext;
+  if (!AC) return;
+  if (!audioCtx) audioCtx = new AC();
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+  stopMusic();
+  musicMaster = audioCtx.createGain();
+  musicMaster.gain.value = 0.055;
+  musicMaster.connect(audioCtx.destination);
+  var chords = [
+    [261.63, 329.63, 392.00],
+    [293.66, 349.23, 440.00],
+    [329.63, 392.00, 493.88],
+    [246.94, 293.66, 369.99]
+  ];
+  var step = 0;
+  function playChord() {
+    if (!audioCtx || !musicMaster) return;
+    var t = audioCtx.currentTime;
+    var chord = chords[step % chords.length];
+    for (var i = 0; i < chord.length; i++) {
+      var o = audioCtx.createOscillator();
+      var g = audioCtx.createGain();
+      o.type = 'sine';
+      o.frequency.value = chord[i];
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.exponentialRampToValueAtTime(0.05 / (i + 1), t + 0.10);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + 1.75);
+      o.connect(g);
+      g.connect(musicMaster);
+      o.start(t);
+      o.stop(t + 1.8);
+    }
+    step++;
+  }
+  playChord();
+  musicTimer = setInterval(playChord, 1650);
+}
+
+musicBtn.addEventListener('click', function () {
+  if (musicOn) {
+    musicOn = false;
+    musicBtn.setAttribute('aria-pressed', 'false');
+    musicBtn.setAttribute('aria-label', '播放音乐');
+    bgm.pause();
+    stopMusic();
     return;
   }
+  musicOn = true;
+  musicBtn.setAttribute('aria-pressed', 'true');
+  musicBtn.setAttribute('aria-label', '停止音乐');
+  bgm.currentTime = 0;
+  bgm.play().catch(function () {
+    startMusic();
+  });
+});
+
+nextBtn.addEventListener('click', function () {
+  if (agreed || isAnimating) return;
+  var c = cards[idx];
+  if (c.final) {
+    try { localStorage.setItem(AGREED_KEY, START_DATE); } catch (e) {}
+    showResult(true);
+    return;
+  }
+  if (idx >= cards.length - 1) return;
+  isAnimating = true;
+  nextBtn.disabled = true;
+  cardEl.classList.remove('slide-in');
   cardEl.classList.add('slide-out');
   setTimeout(function () {
-    idx++;
+    idx = Math.min(idx + 1, cards.length - 1);
     cardEl.classList.remove('slide-out');
     render();
     cardEl.classList.add('slide-in');
-    setTimeout(function () { cardEl.classList.remove('slide-in'); }, 320);
-  }, 300);
+    setTimeout(function () {
+      cardEl.classList.remove('slide-in');
+      isAnimating = false;
+      nextBtn.disabled = false;
+    }, 500);
+  }, 340);
 });
 
 // 漂浮装饰物
 (function () {
+  // 手绘 2D 图案（内联 SVG，任何设备渲染一致）
+  var GEMINI_SVG = '<svg viewBox="0 0 200 200"><defs><linearGradient id="gemg" x1="40" y1="30" x2="160" y2="170" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#7FB8E8"/><stop offset="1" stop-color="#B7A6F0"/></linearGradient></defs><path d="M56 54 Q100 72 144 54" stroke="url(#gemg)" stroke-width="10" fill="none" stroke-linecap="round"/><path d="M71 62 L71 138" stroke="url(#gemg)" stroke-width="10" stroke-linecap="round"/><path d="M129 62 L129 138" stroke="url(#gemg)" stroke-width="10" stroke-linecap="round"/><path d="M56 146 Q100 128 144 146" stroke="url(#gemg)" stroke-width="10" fill="none" stroke-linecap="round"/><path d="M164 26 l3.5 9 9 3.5 -9 3.5 -3.5 9 -3.5 -9 -9 -3.5 9 -3.5 z" fill="#FFD9A0"/><circle cx="38" cy="168" r="5" fill="#FFB7C5"/></svg>';
+  var HORSE_SVG = '<svg viewBox="0 0 200 200"><ellipse cx="92" cy="122" rx="48" ry="32" fill="#FFD9A0"/><circle cx="142" cy="74" r="23" fill="#FFD9A0"/><ellipse cx="159" cy="80" rx="11" ry="9" fill="#FFEBD0"/><path d="M130 58 L125 40 L141 51 Z" fill="#FFD9A0"/><circle cx="147" cy="69" r="3.4" fill="#5B4A3A"/><circle cx="148.4" cy="67.6" r="1.2" fill="#fff"/><circle cx="123" cy="56" r="8" fill="#FFB7C5"/><circle cx="112" cy="68" r="8" fill="#FFB7C5"/><circle cx="103" cy="82" r="8" fill="#FFB7C5"/><ellipse cx="47" cy="112" rx="9" ry="16" fill="#FFB7C5" transform="rotate(24 47 112)"/><rect x="58" y="146" width="11" height="28" rx="5.5" fill="#FFD9A0"/><rect x="80" y="149" width="11" height="28" rx="5.5" fill="#FFD9A0"/><rect x="102" y="149" width="11" height="28" rx="5.5" fill="#FFD9A0"/><rect x="122" y="144" width="11" height="28" rx="5.5" fill="#FFD9A0"/></svg>';
   var marks = ['✦', '☁️', '⭐'];
-  for (var i = 0; i < 8; i++) {
+  for (var i = 0; i < 9; i++) {
     var s = document.createElement('span');
     s.className = 'floater';
-    s.textContent = marks[i % marks.length];
     s.style.left = (Math.random() * 92) + 'vw';
+    s.textContent = marks[i % marks.length];
     s.style.fontSize = (Math.random() * 12 + 12) + 'px';
     s.style.animationDuration = (Math.random() * 12 + 20) + 's';
     s.style.animationDelay = (-Math.random() * 20) + 's';
     document.body.appendChild(s);
   }
-  for (var j = 0; j < 4; j++) {
+  for (var g = 0; g < 6; g++) {
+    var gem = document.createElement('span');
+    gem.className = 'floater gemini';
+    gem.innerHTML = GEMINI_SVG;
+    var gw = Math.random() * 12 + 18;
+    gem.style.width = gw + 'px';
+    gem.style.height = gw + 'px';
+    gem.style.left = (Math.random() * 92) + 'vw';
+    gem.style.animationDuration = (Math.random() * 12 + 20) + 's';
+    gem.style.animationDelay = (-Math.random() * 20) + 's';
+    document.body.appendChild(gem);
+  }
+  for (var h = 0; h < 7; h++) {
+    var horse = document.createElement('span');
+    horse.className = 'floater horse';
+    horse.innerHTML = HORSE_SVG;
+    var hw = Math.random() * 14 + 34;
+    horse.style.width = hw + 'px';
+    horse.style.height = hw + 'px';
+    horse.style.left = (Math.random() * 90 + 2) + 'vw';
+    horse.style.animationDuration = (Math.random() * 14 + 26) + 's';
+    horse.style.animationDelay = (-Math.random() * 20) + 's';
+    document.body.appendChild(horse);
+  }
+  for (var c = 0; c < 2; c++) {
+    var cat = document.createElement('span');
+    cat.className = 'floater cat';
+    cat.textContent = '🐱';
+    cat.style.left = (Math.random() * 90 + 2) + 'vw';
+    cat.style.fontSize = (Math.random() * 6 + 15) + 'px';
+    cat.style.animationDuration = (Math.random() * 14 + 28) + 's';
+    cat.style.animationDelay = (-Math.random() * 20) + 's';
+    document.body.appendChild(cat);
+  }
+  for (var j = 0; j < 5; j++) {
     var t = document.createElement('div');
     t.className = 'floater tomato';
     t.style.left = (Math.random() * 92) + 'vw';
@@ -241,7 +417,15 @@ nextBtn.addEventListener('click', function () {
   }
 })();
 
-render();
+var savedAgree = '';
+try { savedAgree = localStorage.getItem(AGREED_KEY) || ''; } catch (e) {}
+if (savedAgree === START_DATE) {
+  idx = cards.length - 1;
+  render();
+  showResult(false);
+} else {
+  render();
+}
 </script>
 </body>
 </html>
